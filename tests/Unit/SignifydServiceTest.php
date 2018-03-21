@@ -65,6 +65,7 @@ class SignifydServiceTest extends TestCase
         $this->assertNull($response->getPercentScore());
         $this->assertSame('9876', $response->getRequestUid());
         $this->assertFalse($response->isGuaranteed());
+        $this->assertEquals('{"caseId":"9876"}', $response->getRawResponse());
 
         $this->assertEquals([
             'purchase' => [
@@ -241,6 +242,7 @@ class SignifydServiceTest extends TestCase
 
         $this->assertInstanceOf(ResponseInterface::class, $response);
         $this->assertTrue($response->isAsync());
+        $this->assertEmpty($response->getMessages());
     }
 
     public function testUpdateRequestReturnsCaseResponseWithScoreAndMessages()
@@ -519,5 +521,14 @@ class SignifydServiceTest extends TestCase
         $this->assertTrue($response->isAsync());
         $this->assertFalse($response->isGuaranteed());
         $this->assertEquals(50.4, $response->getPercentScore());
+    }
+
+    public function testLogRefusedRequests()
+    {
+        // Should not raise an error
+        $service = new SignifydService([]);
+        $service->logRefusedRequest($this->makeTestRequest());
+
+        $this->assertTrue(true, 'Nothing should happen');
     }
 }

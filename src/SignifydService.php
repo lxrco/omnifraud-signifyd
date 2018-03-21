@@ -72,7 +72,7 @@ JS;
         return new CaseIdResponse($caseId);
     }
 
-    public function getApiClient(): SignifydAPI
+    protected function getApiClient(): SignifydAPI
     {
         if (!$this->apiClient) {
             $this->apiClient = new SignifydAPI($this->settings);
