@@ -9,12 +9,19 @@
             "email": "hugo.v@lxrco.com"
         }
     ],
+    "repositories": [
+        {
+            "type": "path",
+            "url": "../../common"
+        }
+    ],
     "require": {
-        "omnifraud/common": "~0.1",
+        "omnifraud/common": "dev-master",
         "signifyd/signifyd-php": "^1.1"
     },
     "require-dev": {
-        "phpunit/phpunit": "^7.0"
+        "phpunit/phpunit": "^7.0",
+        "mockery/mockery": "^1.0"
     },
     "autoload": {
         "psr-4": {
@@ -30,5 +37,7 @@
         "test": [
             "phpunit"
         ]
-    }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
 }
