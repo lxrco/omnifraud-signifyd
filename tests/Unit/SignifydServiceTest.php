@@ -266,7 +266,7 @@ class SignifydServiceTest extends TestCase
         $this->assertInstanceOf(ResponseInterface::class, $response);
         $this->assertFalse($response->isAsync());
         $this->assertEquals(44, $response->getRequestUid());
-        $this->assertEquals(77, $response->getPercentScore());
+        $this->assertEquals(77.6, $response->getPercentScore());
         $this->assertFalse($response->isGuaranteed());
         $this->assertEquals(json_encode($responseObject), $response->getRawResponse());
         $this->assertCount(1, $response->getMessages());
@@ -518,6 +518,6 @@ class SignifydServiceTest extends TestCase
         $this->assertInstanceOf(ResponseInterface::class, $response);
         $this->assertTrue($response->isAsync());
         $this->assertFalse($response->isGuaranteed());
-        $this->assertEquals(50.0, $response->getPercentScore());
+        $this->assertEquals(50.4, $response->getPercentScore());
     }
 }

@@ -27,7 +27,7 @@ class CaseResponse implements ResponseInterface
         $this->case = $case;
     }
 
-    public function getMessages()
+    public function getMessages(): array
     {
         if ($this->isAsync()) {
             return [];
@@ -47,12 +47,12 @@ class CaseResponse implements ResponseInterface
         return $messages;
     }
 
-    public function getPercentScore()
+    public function getPercentScore(): float
     {
-        return floor($this->case->score / 10);
+        return floor($this->case->score) / 10;
     }
 
-    public function isAsync()
+    public function isAsync(): bool
     {
         if (!isset($this->case->guaranteeDisposition)) {
             return true;
@@ -60,7 +60,7 @@ class CaseResponse implements ResponseInterface
         return !in_array($this->case->guaranteeDisposition, self::CLOSED_GUARANTEES, true);
     }
 
-    public function isGuaranteed()
+    public function isGuaranteed(): bool
     {
         if (!isset($this->case->guaranteeDisposition)) {
             return false;
@@ -69,13 +69,13 @@ class CaseResponse implements ResponseInterface
         return $this->case->guaranteeDisposition === self::APPROVED_GUARANTEE;
     }
 
-    public function getRawResponse()
-    {
-        return json_encode($this->case);
-    }
-
-    public function getRequestUid()
+    public function getRequestUid(): string
     {
         return $this->case->caseId;
+    }
+
+    public function getRawResponse(): string
+    {
+        return json_encode($this->case);
     }
 }

@@ -2,13 +2,14 @@
 
 namespace Omnifraud\Signifyd;
 
+use Omnifraud\Contracts\ResponseInterface;
 use Omnifraud\Contracts\ServiceInterface;
 use Omnifraud\Request\Data\Address;
 use Omnifraud\Request\Request;
 use Omnifraud\Request\RequestException;
 use Signifyd\Core\SignifydAPI;
 use Signifyd\Core\SignifydSettings;
-use Signifyd\Models;
+use Signifyd\Models as SignifydModels;
 
 class SignifydService implements ServiceInterface
 {
@@ -35,7 +36,7 @@ class SignifydService implements ServiceInterface
         }
     }
 
-    public function trackingCode($pageType)
+    public function trackingCode(string $pageType): ?string
     {
         return <<<JS
 trackingCodes.push(function (sid) {
@@ -52,10 +53,10 @@ JS;
     /**
      * @param Request $request
      *
-     * @return CaseIdResponse
+     * @return \Omnifraud\Signifyd\CaseIdResponse
      * @throws \Exception
      */
-    public function validateRequest(Request $request)
+    public function validateRequest(Request $request): ResponseInterface
     {
         $case = $this->makeCase($request);
 
@@ -71,7 +72,7 @@ JS;
         return new CaseIdResponse($caseId);
     }
 
-    public function getApiClient()
+    public function getApiClient(): SignifydAPI
     {
         if (!$this->apiClient) {
             $this->apiClient = new SignifydAPI($this->settings);
@@ -79,14 +80,14 @@ JS;
         return $this->apiClient;
     }
 
-    public function setApiClient(SignifydAPI $apiClient)
+    public function setApiClient(SignifydAPI $apiClient): void
     {
         $this->apiClient = $apiClient;
     }
 
-    protected function makeAddress(Address $address)
+    protected function makeAddress(Address $address): SignifydModels\Address
     {
-        $signifyAddress = new Models\Address();
+        $signifyAddress = new SignifydModels\Address();
         $signifyAddress->streetAddress = $address->getStreetAddress();
         $signifyAddress->unit = $address->getUnit();
         $signifyAddress->city = $address->getCity();
@@ -97,11 +98,11 @@ JS;
         return $signifyAddress;
     }
 
-    protected function makeCase(Request $request)
+    protected function makeCase(Request $request): SignifydModels\CaseModel
     {
-        $case = new Models\CaseModel();
+        $case = new SignifydModels\CaseModel();
 
-        $purchase = new Models\Purchase();
+        $purchase = new SignifydModels\Purchase();
         $purchase->browserIpAddress = $request->getSession()->getIp();
         $purchase->orderId = $request->getPurchase()->getId();
         $purchase->createdAt = $request->getPurchase()->getCreatedAt()->format('c');
@@ -114,7 +115,7 @@ JS;
         $purchase->products = [];
 
         foreach ($request->getPurchase()->getProducts() as $product) {
-            $p = new Models\Product();
+            $p = new SignifydModels\Product();
             $p->itemId = $product->getSku();
             $p->itemName = $product->getName();
             $p->itemUrl = $product->getUrl();
@@ -125,7 +126,7 @@ JS;
         }
         $case->purchase = $purchase;
 
-        $card = new Models\Card();
+        $card = new SignifydModels\Card();
         $card->cardHolderName = $request->getBillingAddress()->getFullName();
         $card->bin = $request->getPayment()->getBin();
         $card->last4 = $request->getPayment()->getLast4();
@@ -134,7 +135,7 @@ JS;
         $card->billingAddress = $this->makeAddress($request->getBillingAddress());
         $case->card = $card;
 
-        $userAccount = new Models\UserAccount();
+        $userAccount = new SignifydModels\UserAccount();
         $userAccount->emailAddress = $request->getAccount()->getEmail();
         $userAccount->username = $request->getAccount()->getUsername();
         $userAccount->phone = $request->getAccount()->getPhone();
@@ -146,7 +147,7 @@ JS;
         $userAccount->lastUpdateDate = $request->getAccount()->getUpdatedAt()->format('c');
         $case->userAccount = $userAccount;
 
-        $recipient = new Models\Recipient();
+        $recipient = new SignifydModels\Recipient();
         $recipient->fullName = $request->getShippingAddress()->getFullName();
         $recipient->confirmationEmail = $request->getAccount()->getEmail();
         $recipient->confirmationPhone = $request->getShippingAddress()->getPhone();
@@ -157,7 +158,7 @@ JS;
     }
 
     /** @inheritdoc */
-    public function updateRequest(Request $request)
+    public function updateRequest(Request $request): ResponseInterface
     {
         $case = $this->getApiClient()->getCase($request->getUid());
 
@@ -171,12 +172,12 @@ JS;
         return new CaseResponse($case);
     }
 
-    public function getRequestExternalLink($requestUid)
+    public function getRequestExternalLink($requestUid): string
     {
         return sprintf($this->config['caseUrl'], $requestUid);
     }
 
-    public function cancelRequest($requestUid)
+    public function cancelRequest(string $requestUid): void
     {
         $result = $this->getApiClient()->cancelGuarantee($requestUid);
 
@@ -194,7 +195,7 @@ JS;
         );
     }
 
-    public function logRefusedRequest(Request $request)
+    public function logRefusedRequest(Request $request): void
     {
         // Nothing to do here
     }

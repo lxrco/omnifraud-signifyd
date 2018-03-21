@@ -13,32 +13,32 @@ class CaseIdResponse implements ResponseInterface
         $this->caseId = $caseId;
     }
 
-    public function getMessages()
+    public function getMessages(): array
     {
         return [];
     }
 
-    public function getPercentScore()
+    public function getPercentScore(): ?float
     {
         return null;
     }
 
-    public function isAsync()
+    public function isAsync(): bool
     {
         return true;
     }
 
-    public function isGuaranteed()
+    public function isGuaranteed(): bool
     {
         return false;
     }
 
-    public function getRequestUid()
+    public function getRequestUid(): string
     {
         return $this->caseId;
     }
 
-    public function getRawResponse()
+    public function getRawResponse(): string
     {
         return json_encode(['caseId' => $this->caseId]);
     }
