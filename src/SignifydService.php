@@ -172,7 +172,7 @@ JS;
         return new CaseResponse($case);
     }
 
-    public function getRequestExternalLink($requestUid): string
+    public function getRequestExternalLink(string $requestUid): ?string
     {
         return sprintf($this->config['caseUrl'], $requestUid);
     }
