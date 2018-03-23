@@ -122,6 +122,10 @@ JS;
             $p->itemImage = $product->getImage();
             $p->itemQuantity = $product->getQuantity();
             $p->itemPrice = $product->getPrice() / 100;
+            $p->itemWeight = $product->getWeight();
+            $p->itemIsDigital = $product->isDigital();
+            $p->itemCategory = $product->getCategory();
+            $p->itemSubCategory = $product->getSubCategory();
             $purchase->products[] = $p;
         }
         $case->purchase = $purchase;
