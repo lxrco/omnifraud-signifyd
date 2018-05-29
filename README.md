@@ -55,7 +55,7 @@ $service = new \Omnifraud\Signifyd\SignifydService($serviceConfig);
 $response = $service->validateRequest($request);
 
 // Should always be true for a first request
-if ($response->isAsync()) {
+if ($response->isPending()) {
     // Queue job for later update
 }
 
@@ -79,12 +79,12 @@ $response = $service->updateRequest($request);
 // Use for updating
 $requestUid = $response->getRequestUid();
 
-if ($response->isAsync()) {
+if ($response->isPending()) {
     // Retry later
     return;
 }
 
-$score = $response->getPercentScore(); // Signifyd score divided by 10, 100 is best, 0 is worst
+$score = $response->getScore(); // Signifyd score divided by 10, 100 is best, 0 is worst
 $guaranteed = $response->isGuaranteed(); // If covered by Signifyd guarantee
 
 ```
@@ -113,11 +113,17 @@ try {
 
 You [implement the frontend code](https://github.com/lxrco/omnifraud#frontend-code) in order to track devices pre-purchase.
 
+```
+<script>
+<?= $fraudService->trackingCode(ServiceInterface::PAGE_CHECKOUT, $_COOKIE['sessionId']); ?>
+</script>
+```
+
 Then you will need to add the sessionId to the request:
 
 ```php
 // Retrieve the session ID with some method, it can come from server side cookies/session also
-$request->setSession($_POST['sessionId']);
+$request->setSession($_COOKIE['sessionId']);
 ```
 
 
