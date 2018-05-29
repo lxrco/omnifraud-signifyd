@@ -27,32 +27,12 @@ class CaseResponse implements ResponseInterface
         $this->case = $case;
     }
 
-    public function getMessages(): array
-    {
-        if ($this->isAsync()) {
-            return [];
-        }
-
-        $messages = [];
-
-        $reviewDisposition = $this->case->reviewDisposition;
-        if ($reviewDisposition !== self::UNSET_REVIEW) {
-            $messages[] = new BaseMessage(
-                $reviewDisposition === self::GOOD_REVIEW ? BaseMessage::TYPE_INFO : BaseMessage::TYPE_WARNING,
-                'REV',
-                'Review disposition: ' . $reviewDisposition
-            );
-        }
-
-        return $messages;
-    }
-
-    public function getPercentScore(): float
+    public function getScore(): float
     {
         return floor($this->case->score) / 10;
     }
 
-    public function isAsync(): bool
+    public function isPending(): bool
     {
         if (!isset($this->case->guaranteeDisposition)) {
             return true;

@@ -27,15 +27,13 @@ class SignifydServiceTest extends TestCase
             'apiKey' => 'test',
         ]);
 
-        $this->assertContains(
-            "setAttribute('data-order-session-id', sid)",
-            $driver->trackingCode(ServiceInterface::PAGE_CHECKOUT) . "\n"
-        );
+        $this->assertContains('"1242"', $driver->trackingCode(ServiceInterface::PAGE_CHECKOUT, '1242'));
 
-        $this->assertContains(
-            "setAttribute('data-order-session-id', sid)",
-            $driver->trackingCode(ServiceInterface::PAGE_ALL) . "\n"
-        );
+        $this->assertContains('"1242"', $driver->trackingCode(ServiceInterface::PAGE_ALL, '1242'));
+
+        // Unescaped
+        $this->assertNotContains('"1242"', $driver->trackingCode(ServiceInterface::PAGE_ALL, '1242', false));
+        $this->assertContains('1242', $driver->trackingCode(ServiceInterface::PAGE_ALL, '1242', false));
     }
 
     public function testValidateRequestWithCompleteRequest()
@@ -60,9 +58,8 @@ class SignifydServiceTest extends TestCase
         $response = $service->validateRequest($this->makeTestRequest());
 
         // Asserts
-        $this->assertTrue($response->isAsync());
-        $this->assertEmpty($response->getMessages());
-        $this->assertNull($response->getPercentScore());
+        $this->assertTrue($response->isPending());
+        $this->assertNull($response->getScore());
         $this->assertSame('9876', $response->getRequestUid());
         $this->assertFalse($response->isGuaranteed());
         $this->assertEquals('{"caseId":"9876"}', $response->getRawResponse());
@@ -241,8 +238,7 @@ class SignifydServiceTest extends TestCase
         $response = $service->updateRequest($request);
 
         $this->assertInstanceOf(ResponseInterface::class, $response);
-        $this->assertTrue($response->isAsync());
-        $this->assertEmpty($response->getMessages());
+        $this->assertTrue($response->isPending());
     }
 
     public function testUpdateRequestReturnsCaseResponseWithScoreAndMessages()
@@ -266,13 +262,11 @@ class SignifydServiceTest extends TestCase
         $response = $service->updateRequest($request);
 
         $this->assertInstanceOf(ResponseInterface::class, $response);
-        $this->assertFalse($response->isAsync());
+        $this->assertFalse($response->isPending());
         $this->assertEquals(44, $response->getRequestUid());
-        $this->assertEquals(77.6, $response->getPercentScore());
+        $this->assertEquals(77.6, $response->getScore());
         $this->assertFalse($response->isGuaranteed());
         $this->assertEquals(json_encode($responseObject), $response->getRawResponse());
-        $this->assertCount(1, $response->getMessages());
-        $this->assertEquals('REV', $response->getMessages()[0]->getCode());
     }
 
     public function testUpdateRequestWithGuaranteedResponse()
@@ -343,53 +337,6 @@ class SignifydServiceTest extends TestCase
         $service->updateRequest($request);
     }
 
-    public function messagesDataProvider()
-    {
-        return [
-            [
-                ['guaranteeDisposition' => 'APPROVED', 'reviewDisposition' => 'GOOD'],
-                [
-                    ['type' => MessageInterface::TYPE_INFO, 'message' => 'Review disposition: GOOD'],
-                ],
-            ],
-            [
-                ['guaranteeDisposition' => 'DECLINED', 'reviewDisposition' => 'FRAUDULENT'],
-                [
-                    ['type' => MessageInterface::TYPE_WARNING, 'message' => 'Review disposition: FRAUDULENT'],
-                ],
-            ],
-            [
-                ['guaranteeDisposition' => 'CANCELED', 'reviewDisposition' => 'UNSET'],
-                [],
-            ],
-        ];
-    }
-
-    /** @dataProvider messagesDataProvider */
-    public function testUpdateRequestMessages($merge, $expectedMessages)
-    {
-        // Set up
-        $responseObject = $this->getSignifydCaseResponse($merge);
-
-        $mockApiClient = Mockery::mock(SignifydAPI::class);
-        $mockApiClient->shouldReceive('getCase')
-            ->once()
-            ->with(44)
-            ->andReturn($responseObject);
-
-        $service = new SignifydService([]);
-        $service->setApiClient($mockApiClient);
-
-        $request = new Request();
-        $request->setUid(44);
-
-        $response = $service->updateRequest($request);
-
-        $this->assertInstanceOf(ResponseInterface::class, $response);
-        $this->assertFalse($response->isAsync());
-        $this->assertEquals(json_encode($expectedMessages), json_encode($response->getMessages()));
-    }
-
     public function testGetRequestExternalLink()
     {
         $service = new SignifydService([]);
@@ -412,7 +359,9 @@ class SignifydServiceTest extends TestCase
         $service->setApiClient($mockApiClient);
 
         // Run
-        $service->cancelRequest('994312');
+        $request = new Request();
+        $request->setUid('994312');
+        $service->cancelRequest($request);
     }
 
     public function testCancelRequestWithFailingRequest()
@@ -434,7 +383,9 @@ class SignifydServiceTest extends TestCase
         $this->expectException(RequestException::class);
 
         // Run
-        $service->cancelRequest('994312');
+        $request = new Request();
+        $request->setUid('994312');
+        $service->cancelRequest($request);
     }
 
     public function testCancelRequestWithNonDeclinedRequest()
@@ -454,7 +405,9 @@ class SignifydServiceTest extends TestCase
         $service->setApiClient($mockApiClient);
 
         // Run (This should not throw
-        $service->cancelRequest('994312');
+        $request = new Request();
+        $request->setUid('994312');
+        $service->cancelRequest($request);
     }
 
     public function testCancelRequestWithNonSubmitedRequest()
@@ -474,7 +427,9 @@ class SignifydServiceTest extends TestCase
         $service->setApiClient($mockApiClient);
 
         // Run (This should not throw
-        $service->cancelRequest('994312');
+        $request = new Request();
+        $request->setUid('994312');
+        $service->cancelRequest($request);
     }
 
     public function testRequestNotSentForReview()
@@ -518,9 +473,9 @@ class SignifydServiceTest extends TestCase
         $response = $service->updateRequest($request);
 
         $this->assertInstanceOf(ResponseInterface::class, $response);
-        $this->assertTrue($response->isAsync());
+        $this->assertTrue($response->isPending());
         $this->assertFalse($response->isGuaranteed());
-        $this->assertEquals(50.4, $response->getPercentScore());
+        $this->assertEquals(50.4, $response->getScore());
     }
 
     public function testLogRefusedRequests()

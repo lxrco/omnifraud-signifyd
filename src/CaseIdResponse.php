@@ -13,17 +13,12 @@ class CaseIdResponse implements ResponseInterface
         $this->caseId = $caseId;
     }
 
-    public function getMessages(): array
-    {
-        return [];
-    }
-
-    public function getPercentScore(): ?float
+    public function getScore(): ?float
     {
         return null;
     }
 
-    public function isAsync(): bool
+    public function isPending(): bool
     {
         return true;
     }

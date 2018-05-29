@@ -10,7 +10,7 @@
         }
     ],
     "require": {
-        "omnifraud/common": "^0.1",
+        "omnifraud/common": "^0.3.0",
         "signifyd/signifyd-php": "^1.1.2"
     },
     "require-dev": {

@@ -36,17 +36,21 @@ class SignifydService implements ServiceInterface
         }
     }
 
-    public function trackingCode(string $pageType): ?string
+    public function trackingCode(string $pageType, string $sessionId, bool $quote = true): string
     {
+        if ($quote) {
+            $sessionId = json_encode($sessionId);
+        }
+
         return <<<JS
-trackingCodes.push(function (sid) {
+(function (sid) {
     var script = document.createElement('script');
     script.setAttribute('src', 'https://cdn-scripts.signifyd.com/api/script-tag.js');
     script.setAttribute('data-order-session-id', sid);
     script.setAttribute('id', 'sig-api');
 
     document.body.appendChild(script);
-});
+})($sessionId);
 JS;
     }
 
@@ -181,9 +185,9 @@ JS;
         return sprintf($this->config['caseUrl'], $requestUid);
     }
 
-    public function cancelRequest(string $requestUid): void
+    public function cancelRequest(Request $request): void
     {
-        $result = $this->getApiClient()->cancelGuarantee($requestUid);
+        $result = $this->getApiClient()->cancelGuarantee($request->getUid());
 
         if ($result) {
             return;
